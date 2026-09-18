@@ -1,12 +1,12 @@
-# 🌱 Smart Farm IoT Monitoring & Actuator Control System
+# ⚡ IoT Smart Climate Control System
 
 [![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
 [![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
-[![ESP8266 / ESP32](https://img.shields.io/badge/ESP8266%2FESP32-000000?style=for-the-badge&logo=expressif&logoColor=white)](https://www.espressif.com/)
+[![ESP8266 / ESP32](https://img.shields.io/badge/ESP8266%2FESP32-000000?style=for-the-badge&logo=espressif&logoColor=white)](https://www.espressif.com/)
 [![Chart.js / Highcharts](https://img.shields.io/badge/Telemetry-Visualization-FF6384?style=for-the-badge)](https://www.chartjs.org/)
 
-A lightweight, robust **PHP & MySQL IoT Telemetry & Actuator Management System** designed for smart farming, environmental monitoring, and automated irrigation control. It receives telemetry from microcontrollers (ESP8266, ESP32, Arduino), provides real-time sensor dashboards, and serves control settings back to edge devices.
+The **IoT Smart Climate Control System** is a real-time **PHP & MySQL Telemetry & Actuator Management Platform** built for environmental monitoring, climate regulation, soil moisture tracking, and automated relay/device control. Designed to interface seamlessly with microcontrollers (ESP8266, ESP32, Arduino), it processes incoming sensor streams and serves real-time operational states back to edge devices.
 
 ---
 
@@ -14,11 +14,11 @@ A lightweight, robust **PHP & MySQL IoT Telemetry & Actuator Management System**
 
 | Feature | Description |
 | :--- | :--- |
-| 📊 **Telemetry Ingestion API** | Endpoints (`add_data.php`, `update_data.php`) to log temperature, soil moisture, humidity, and gas/PPM readings. |
-| 🎛️ **Actuator & Relay Control** | Endpoint (`get_data.php`) returning live device configuration states (relays, pumps, automated schedules). |
-| ⏱️ **Automated Scheduler** | `scheduler.php` engine powering timed actuator toggles and scheduled irrigation cycles. |
-| 💧 **Soil & Weather Analytics** | Specialized endpoints (`get_soil_info.php`) querying historical trends for analytics & charts. |
-| 🔐 **Authentication & Settings** | Protected admin portal for toggling device states and configuring threshold triggers. |
+| 📊 **Telemetry Ingestion API** | High-performance endpoints (`add_data.php`, `update_data.php`) to log temperature, soil moisture, humidity, and gas/PPM readings. |
+| 🎛️ **Actuator & Relay Control** | Dedicated endpoint (`get_data.php`) delivering real-time actuator commands (fans, heaters, irrigation pumps, lights). |
+| ⏱️ **Automated Scheduler** | `scheduler.php` engine for timed relay triggers, climate control cycles, and scheduled automation routines. |
+| 💧 **Soil & Climate Analytics** | Specialized data query endpoints (`get_soil_info.php`) generating historical time-series datasets for interactive charts. |
+| 🔐 **Settings & Device Management** | Administrative interface to toggle relay states and configure sensor threshold values dynamically. |
 
 ---
 
@@ -27,14 +27,14 @@ A lightweight, robust **PHP & MySQL IoT Telemetry & Actuator Management System**
 ```
  +------------------------------------------------------------------+
  |                Microcontrollers & Edge Devices                   |
- |              (ESP8266 / ESP32 / Arduino / Sensors)               |
+ |         (ESP8266 / ESP32 / Arduino / Environmental Sensors)      |
  +------------------------------------------------------------------+
                                   |
                    HTTP GET / POST Telemetry Requests
                                   |
                                   v
  +------------------------------------------------------------------+
- |                        PHP IoT API Engine                        |
+ |                    PHP IoT Climate Control API                   |
  |   add_data.php | get_data.php | update_data.php | scheduler.php   |
  +------------------------------------------------------------------+
                                   |
@@ -48,31 +48,31 @@ A lightweight, robust **PHP & MySQL IoT Telemetry & Actuator Management System**
                                   |
                                   v
  +------------------------------------------------------------------+
- |                 Web Control Panel & Visualization                |
+ |            Web Control Panel & Interactive Analytics             |
  |                     (index.php / Highcharts)                     |
  +------------------------------------------------------------------+
 ```
 
 ---
 
-## 📁 Repository Directory Structure
+## 📁 Project Directory Structure
 
 ```
 iot/
-├── index.php             # Main Web Dashboard & Sensor Monitoring Interface
+├── index.php             # Web Dashboard & Live Climate Monitoring Panel
 ├── config.php            # Database connection & timezone configuration
-├── add_data.php          # Telemetry ingestion endpoint for microcontrollers
-├── get_data.php          # Edge device config retriever (returns active relay states)
-├── update_data.php       # Live sensor data updater (DHT11/DHT22 temp, hum, ppm)
+├── add_data.php          # Telemetry ingestion endpoint for sensor nodes
+├── get_data.php          # Edge device state retriever (relays, pumps, switches)
+├── update_data.php       # Live climate updater (DHT11/DHT22 temp, humidity, ppm)
 ├── get_soil_info.php     # Endpoint returning soil moisture & temp JSON history
-├── scheduler.php         # Timed task executor for automated relays & pumps
+├── scheduler.php         # Timed task executor for climate & irrigation cycles
 ├── include/
 │   ├── class.php         # Core OOP IoT data handler class (`Iot`)
 │   ├── header.php        # UI Header template
 │   └── footer.php        # UI Footer template
 ├── css/                  # Custom CSS stylesheets & Bootstrap assets
 ├── js/                   # Dashboard JavaScript & charting scripts
-└── lib/                  # Helper libraries & dependencies
+└── lib/                  # Helper libraries (Highcharts, FontAwesome, etc.)
 ```
 
 ---
@@ -80,7 +80,7 @@ iot/
 ## 🛠️ API Endpoint Specification
 
 ### 1. Ingest Sensor Data (`add_data.php`)
-Microcontrollers send HTTP GET requests to log sensor telemetry:
+Microcontrollers send HTTP GET requests to log telemetry:
 ```
 GET /iot/add_data.php?sensor=soil_moisture&data=65&indata=24.5
 ```
@@ -88,23 +88,23 @@ GET /iot/add_data.php?sensor=soil_moisture&data=65&indata=24.5
 - **`data`**: Primary sensor measurement (e.g. moisture level %).
 - **`indata`**: Secondary sensor measurement (e.g. soil temperature °C).
 
-### 2. Update Live Weather (`update_data.php`)
-Update live ambient weather parameters:
+### 2. Update Live Climate (`update_data.php`)
+Update live ambient weather and climate parameters:
 ```
 GET /iot/update_data.php?tem=26.4&hum=72&ppm=412
 ```
 
 ### 3. Fetch Actuator Control States (`get_data.php`)
-Edge devices poll this endpoint to fetch relay/pump operation states:
+Edge devices poll this endpoint to retrieve current relay/switch states:
 ```
 GET /iot/get_data.php
 ```
 **Sample JSON Response:**
 ```json
 {
-  "pump": 11,
-  "light": 10,
-  "fan": 11
+  "fan": 11,
+  "heater": 10,
+  "pump": 11
 }
 ```
 *(Note: `11` = ON, `10` = OFF)*
@@ -129,7 +129,7 @@ GET /iot/get_data.php
    define('DB_PASS', '');
    define('URL', 'http://localhost/iot/');
    ```
-3. **Database Import**:
+3. **Database Setup**:
    Ensure MySQL database `dev_iot` is created with tables for `setting`, `dh11`, and your target sensor tables.
 
 ---
