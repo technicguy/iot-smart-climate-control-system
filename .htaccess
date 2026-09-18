@@ -1,0 +1,18 @@
+#Options All -Indexes
+#Order allow,deny
+#Allow from all
+
+
+<IfModule mod_rewrite.c>
+   RewriteEngine on
+   
+	RewriteCond %{REQUEST_URI}  (\.map)$
+	RewriteRule (.*)  404.map [QSA]
+	#RewriteCond %{HTTPS} off
+	#RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+   RewriteBase /iot/
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule ^(.*)$ ?page=$1 [L,QSA]
+</IfModule> 
+
