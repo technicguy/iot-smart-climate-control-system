@@ -10,6 +10,16 @@ The **IoT Smart Climate Control System** is a real-time **PHP & MySQL Telemetry 
 
 ---
 
+## 📺 Live Video Demo & Dashboard Walkthrough
+
+Watch the complete project demonstration showing the live PHP climate control dashboard, real-time telemetry graphs, and hardware actuator relays in action:
+
+[![PHP Climate Control Dashboard Demo](https://img.youtube.com/vi/f8a_zdn-VkQ/maxresdefault.jpg)](https://youtu.be/f8a_zdn-VkQ)
+
+▶️ **Watch on YouTube:** [https://youtu.be/f8a_zdn-VkQ](https://youtu.be/f8a_zdn-VkQ)
+
+---
+
 ## 🌟 Key Features
 
 | Feature | Description |
