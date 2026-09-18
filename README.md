@@ -4,9 +4,9 @@
 [![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![ESP8266 / ESP32](https://img.shields.io/badge/ESP8266%2FESP32-000000?style=for-the-badge&logo=espressif&logoColor=white)](https://www.espressif.com/)
-[![Chart.js / Highcharts](https://img.shields.io/badge/Telemetry-Visualization-FF6384?style=for-the-badge)](https://www.chartjs.org/)
+[![Arduino Mega](https://img.shields.io/badge/Arduino-Mega2560-00979D?style=for-the-badge&logo=arduino&logoColor=white)](https://www.arduino.cc/)
 
-The **IoT Smart Climate Control System** is a real-time **PHP & MySQL Telemetry & Actuator Management Platform** built for environmental monitoring, climate regulation, soil moisture tracking, and automated relay/device control. Designed to interface seamlessly with microcontrollers (ESP8266, ESP32, Arduino), it processes incoming sensor streams and serves real-time operational states back to edge devices.
+The **IoT Smart Climate Control System** is a complete hardware-to-cloud **PHP & MySQL Telemetry & Actuator Management Platform** built for environmental monitoring, mushroom farming climate regulation, soil moisture tracking, and automated relay/device control. Designed to interface with Arduino Mega and NodeMCU (ESP8266) microcontrollers, it processes incoming sensor telemetry streams and serves real-time operational state commands back to edge devices.
 
 ---
 
@@ -20,29 +20,39 @@ Watch the complete project demonstration showing the live PHP climate control da
 
 ---
 
+## 🤖 Firmware & Hardware Controller Architecture
+
+This system uses a modular multi-controller hardware setup connected over Wi-Fi and I2C/Serial:
+
+| Module / Sketch | Microcontroller | Primary Role |
+| :--- | :--- | :--- |
+| 🖥️ **`Mega_DHT22_MQ135`** | **Arduino Mega 2560** | Main physical controller & local display driver. Reads DHT22 (Temp & Humidity) + MQ135 (Air Quality/CO2), controls 4-relay outputs (fans, heaters, humidifiers, pumps), and updates LCD. |
+| 📡 **`NodeMCU_Auto_Wifi`** | **NodeMCU (ESP8266)** | Cloud & Server Gateway. Manages Wi-Fi connections via `WiFiManager`, syncs ambient telemetry with the server (`update_data.php`), and polls relay control commands (`get_data.php`). |
+| 💧 **`NodeMCU_Soil_Sensor`** | **NodeMCU (ESP8266)** | Soil & Substrate Monitor. Reads analog soil moisture & DS18B20 waterproof temperature probe, displays stats on 16x2 I2C LCD, and posts data to server (`add_data.php?sensor=soil`). |
+
+---
+
 ## 🌟 Key Features
 
 | Feature | Description |
 | :--- | :--- |
-| 📊 **Telemetry Ingestion API** | High-performance endpoints (`add_data.php`, `update_data.php`) to log temperature, soil moisture, humidity, and gas/PPM readings. |
-| 🎛️ **Actuator & Relay Control** | Dedicated endpoint (`get_data.php`) delivering real-time actuator commands (fans, heaters, irrigation pumps, lights). |
+| 📊 **Telemetry Ingestion API** | Endpoints (`add_data.php`, `update_data.php`) to log temperature, humidity, soil moisture, and gas/PPM readings. |
+| 🎛️ **Actuator & Relay Control** | Dedicated endpoint (`get_data.php`) delivering real-time actuator commands (fans, heaters, pumps, lights). |
 | ⏱️ **Automated Scheduler** | `scheduler.php` engine for timed relay triggers, climate control cycles, and scheduled automation routines. |
-| 💧 **Soil & Climate Analytics** | Specialized data query endpoints (`get_soil_info.php`) generating historical time-series datasets for interactive charts. |
-| 🔐 **Settings & Device Management** | Administrative interface to toggle relay states and configure sensor threshold values dynamically. |
+| 💧 **Soil & Climate Analytics** | Specialized query endpoints (`get_soil_info.php`) generating historical time-series datasets for interactive charts. |
+| 🔐 **Settings & Device Management** | Administrative web interface to toggle relay states and configure sensor threshold values dynamically. |
 
 ---
 
-## 🗄️ Complete Database Structure (MySQL DDL)
+## 🗄️ Database Structure (MySQL DDL)
 
-Below is the complete SQL DDL schema required to create the MySQL database tables (`dev_iot`) for this platform:
+Below is the complete SQL DDL schema required to initialize the `dev_iot` database:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS `dev_iot` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `dev_iot`;
 
--- ========================================================
 -- 1. SETTING TABLE (Actuator states, thresholds & relays)
--- ========================================================
 CREATE TABLE IF NOT EXISTS `setting` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(50) NOT NULL UNIQUE,
@@ -51,19 +61,11 @@ CREATE TABLE IF NOT EXISTS `setting` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed Default Actuators & Threshold Settings
 INSERT INTO `setting` (`id`, `name`, `value`) VALUES
-(1, 'fan_sw', 'off'),
-(2, 'light_sw', 'off'),
-(3, 'pump_sw', 'off'),
-(4, 'heater_sw', 'off'),
-(5, 'temp_threshold', '30'),
-(6, 'humidity_threshold', '70'),
-(7, 'moisture_threshold', '40');
+(1, 'fan_sw', 'off'), (2, 'light_sw', 'off'), (3, 'pump_sw', 'off'), (4, 'heater_sw', 'off'),
+(5, 'temp_threshold', '30'), (6, 'humidity_threshold', '70'), (7, 'moisture_threshold', '40');
 
--- ========================================================
 -- 2. DH11 TABLE (DHT11/DHT22 Ambient Weather Telemetry)
--- ========================================================
 CREATE TABLE IF NOT EXISTS `dh11` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `tem` FLOAT DEFAULT '0',
@@ -73,13 +75,9 @@ CREATE TABLE IF NOT EXISTS `dh11` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed Default Live Weather Row (ID 100 used by system)
-INSERT INTO `dh11` (`id`, `tem`, `hum`, `ppm`) VALUES
-(100, 25.0, 60.0, 400.0);
+INSERT INTO `dh11` (`id`, `tem`, `hum`, `ppm`) VALUES (100, 25.0, 60.0, 400.0);
 
--- ========================================================
--- 3. SOIL TABLE (Soil Moisture & Temperature Logs)
--- ========================================================
+-- 3. SOIL TABLE (Soil Moisture & Substrate Temperature Logs)
 CREATE TABLE IF NOT EXISTS `soil` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `value` FLOAT DEFAULT '0',
@@ -88,9 +86,7 @@ CREATE TABLE IF NOT EXISTS `soil` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ========================================================
--- 4. USERS TABLE (Dashboard Administrative Authentication)
--- ========================================================
+-- 4. USERS TABLE (Dashboard Authentication)
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `user` VARCHAR(50) NOT NULL UNIQUE,
@@ -99,122 +95,37 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed Admin User (Username: admin, Password: password)
-INSERT INTO `users` (`user`, `pwd`) VALUES
-('admin', 'password');
+INSERT INTO `users` (`user`, `pwd`) VALUES ('admin', 'password');
 ```
 
 ---
 
-## 🏗️ System Architecture
-
-```
- +------------------------------------------------------------------+
- |                Microcontrollers & Edge Devices                   |
- |         (ESP8266 / ESP32 / Arduino / Environmental Sensors)      |
- +------------------------------------------------------------------+
-                                  |
-                   HTTP GET / POST Telemetry Requests
-                                  |
-                                  v
- +------------------------------------------------------------------+
- |                    PHP IoT Climate Control API                   |
- |   add_data.php | get_data.php | update_data.php | scheduler.php   |
- +------------------------------------------------------------------+
-                                  |
-                        PDO MySQL Database Handler
-                                  |
-                                  v
- +------------------------------------------------------------------+
- |                         MySQL Database                           |
- |          [ setting ] [ dh11 ] [ soil ] [ users ]                 |
- +------------------------------------------------------------------+
-                                  |
-                                  v
- +------------------------------------------------------------------+
- |            Web Control Panel & Interactive Analytics             |
- |                     (index.php / Highcharts)                     |
- +------------------------------------------------------------------+
-```
-
----
-
-## 📁 Project Directory Structure
+## 📁 Repository Directory Structure
 
 ```
 iot/
-├── index.php             # Web Dashboard & Live Climate Monitoring Panel
-├── config.php            # Database connection & timezone configuration
-├── add_data.php          # Telemetry ingestion endpoint for sensor nodes
-├── get_data.php          # Edge device state retriever (relays, pumps, switches)
-├── update_data.php       # Live climate updater (DHT11/DHT22 temp, humidity, ppm)
-├── get_soil_info.php     # Endpoint returning soil moisture & temp JSON history
-├── scheduler.php         # Timed task executor for climate & irrigation cycles
-├── include/
-│   ├── class.php         # Core OOP IoT data handler class (`Iot`)
-│   ├── header.php        # UI Header template
-│   └── footer.php        # UI Footer template
-├── css/                  # Custom CSS stylesheets & Bootstrap assets
-├── js/                   # Dashboard JavaScript & charting scripts
-└── lib/                  # Helper libraries (Highcharts, FontAwesome, etc.)
+├── firmware/                              # 🤖 Microcontroller Source Code
+│   ├── Mega_DHT22_MQ135/                  # Arduino Mega physical display & relay controller
+│   │   └── Mega_DHT22_MQ135.ino
+│   ├── NodeMCU_Auto_Wifi/                 # NodeMCU server gateway & Wi-Fi manager
+│   │   └── NodeMCU_Auto_Wifi.ino
+│   └── NodeMCU_Soil_Sensor/               # NodeMCU soil moisture & temp probe telemetry
+│       └── NodeMCU_Soil_Sensor.ino
+├── index.php                              # Web Dashboard & Live Climate Panel
+├── config.php                             # Database connection & timezone configuration
+├── add_data.php                           # Telemetry ingestion endpoint for sensor nodes
+├── get_data.php                           # Edge device state retriever (relays, pumps, switches)
+├── update_data.php                        # Live climate updater (DHT11/DHT22 temp, humidity, ppm)
+├── get_soil_info.php                      # Endpoint returning soil moisture & temp JSON history
+├── scheduler.php                          # Timed task executor for climate & irrigation cycles
+├── include/                               # Core backend classes & layout templates
+│   ├── class.php                          # Main `Iot` helper class
+│   ├── header.php                         # Header template
+│   └── footer.php                         # Footer template
+├── css/                                   # CSS stylesheets & Bootstrap assets
+├── js/                                    # Dashboard JavaScript & charting handlers
+└── lib/                                   # Highcharts, FontAwesome, etc.
 ```
-
----
-
-## 🛠️ API Endpoint Specification
-
-### 1. Ingest Sensor Data (`add_data.php`)
-Microcontrollers send HTTP GET requests to log telemetry:
-```
-GET /iot/add_data.php?sensor=soil&data=65&indata=24.5
-```
-- **`sensor`**: Target table name (e.g. `soil`, `dh11`).
-- **`data`**: Primary sensor measurement (e.g. soil moisture %).
-- **`indata`**: Secondary sensor measurement (e.g. soil temperature °C).
-
-### 2. Update Live Climate (`update_data.php`)
-Update live ambient weather and climate parameters:
-```
-GET /iot/update_data.php?tem=26.4&hum=72&ppm=412
-```
-
-### 3. Fetch Actuator Control States (`get_data.php`)
-Edge devices poll this endpoint to retrieve current relay/switch states:
-```
-GET /iot/get_data.php
-```
-**Sample JSON Response:**
-```json
-{
-  "fan_sw": 10,
-  "light_sw": 10,
-  "pump_sw": 11,
-  "heater_sw": 10
-}
-```
-*(Note: `11` = ON, `10` = OFF)*
-
----
-
-## ⚙️ Setup & Installation
-
-### Prerequisites
-- PHP 7.4+ or PHP 8.x
-- MySQL / MariaDB Server
-- Web Server (WAMP, XAMPP, Nginx, or Apache)
-
-### Configuration
-
-1. **Copy repository** into your web root (e.g. `C:\wamp64\www\iot`).
-2. **Execute Database DDL**: Import the SQL DDL schema provided in the **Database Structure** section above into your MySQL server.
-3. **Configure Database Connection (`config.php`)**:
-   ```php
-   define('DB_HOST', 'localhost');
-   define('DB_NAME', 'dev_iot');
-   define('DB_USER', 'root');
-   define('DB_PASS', '');
-   define('URL', 'http://localhost/iot/');
-   ```
 
 ---
 
