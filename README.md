@@ -20,6 +20,32 @@ Watch the complete project demonstration showing the live PHP climate control da
 
 ---
 
+## 🛠️ Required Hardware Components & Bill of Materials (BOM)
+
+### 🔌 Microcontroller Boards & Gateways
+| Component | Quantity | Description |
+| :--- | :---: | :--- |
+| **Arduino Mega 2560** | 1 | Primary physical controller & I/O expander for sensor reading & relay manipulation. |
+| **NodeMCU (ESP8266 v3)** | 2 | Wi-Fi IoT gateway boards handling server HTTP POST/GET telemetry & data polling. |
+
+### 🌡️ Sensors & Telemetry Probes
+| Component | Quantity | Interface | Description |
+| :--- | :---: | :---: | :--- |
+| **DHT22 / DHT11** | 1 | Digital Pin 14 | Ambient Air Temperature & Relative Humidity sensor. |
+| **MQ-135** | 1 | Analog Pin A0 | Air Quality, CO2, Smoke, and Hazardous Gas sensor. |
+| **DS18B20** | 1 | OneWire Pin D2 | Waterproof Probe for soil/substrate temperature monitoring. |
+| **Capacitive / Resistive Soil Moisture Sensor** | 1 | Analog Pin A0 | Substrate moisture level sensor. |
+
+### ⚡ Actuators, Displays & Hardware Peripherals
+| Component | Quantity | Description |
+| :--- | :---: | :--- |
+| **4-Channel 5V Relay Module** | 1 | Controls high-voltage AC/DC loads (Exhaust Fan, Heater, Humidifier/Pump, Light). |
+| **16x2 Character LCD Display (I2C 0x27)** | 2 | Displays real-time metrics, connection status, and IP addresses locally. |
+| **12V / 5V Power Supply Unit** | 1 | Delivers stable power to NodeMCU, Arduino Mega, sensors, and relay coils. |
+| **Jumper Wires & Breadboard / PCB** | - | Male-to-Female & Male-to-Male jumper cables for pin connections. |
+
+---
+
 ## 🤖 Firmware & Hardware Controller Architecture
 
 This system uses a modular multi-controller hardware setup connected over Wi-Fi and I2C/Serial:
