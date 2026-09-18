@@ -32,6 +32,80 @@ Watch the complete project demonstration showing the live PHP climate control da
 
 ---
 
+## 🗄️ Complete Database Structure (MySQL DDL)
+
+Below is the complete SQL DDL schema required to create the MySQL database tables (`dev_iot`) for this platform:
+
+```sql
+CREATE DATABASE IF NOT EXISTS `dev_iot` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `dev_iot`;
+
+-- ========================================================
+-- 1. SETTING TABLE (Actuator states, thresholds & relays)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS `setting` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL UNIQUE,
+  `value` VARCHAR(255) NOT NULL,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed Default Actuators & Threshold Settings
+INSERT INTO `setting` (`id`, `name`, `value`) VALUES
+(1, 'fan_sw', 'off'),
+(2, 'light_sw', 'off'),
+(3, 'pump_sw', 'off'),
+(4, 'heater_sw', 'off'),
+(5, 'temp_threshold', '30'),
+(6, 'humidity_threshold', '70'),
+(7, 'moisture_threshold', '40');
+
+-- ========================================================
+-- 2. DH11 TABLE (DHT11/DHT22 Ambient Weather Telemetry)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS `dh11` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `tem` FLOAT DEFAULT '0',
+  `hum` FLOAT DEFAULT '0',
+  `ppm` FLOAT DEFAULT '0',
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed Default Live Weather Row (ID 100 used by system)
+INSERT INTO `dh11` (`id`, `tem`, `hum`, `ppm`) VALUES
+(100, 25.0, 60.0, 400.0);
+
+-- ========================================================
+-- 3. SOIL TABLE (Soil Moisture & Temperature Logs)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS `soil` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `value` FLOAT DEFAULT '0',
+  `tem` FLOAT DEFAULT '0',
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ========================================================
+-- 4. USERS TABLE (Dashboard Administrative Authentication)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `user` VARCHAR(50) NOT NULL UNIQUE,
+  `pwd` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed Admin User (Username: admin, Password: password)
+INSERT INTO `users` (`user`, `pwd`) VALUES
+('admin', 'password');
+```
+
+---
+
 ## 🏗️ System Architecture
 
 ```
@@ -53,7 +127,7 @@ Watch the complete project demonstration showing the live PHP climate control da
                                   v
  +------------------------------------------------------------------+
  |                         MySQL Database                           |
- |               [ setting ] [ dh11 ] [ sensor_logs ]               |
+ |          [ setting ] [ dh11 ] [ soil ] [ users ]                 |
  +------------------------------------------------------------------+
                                   |
                                   v
@@ -92,10 +166,10 @@ iot/
 ### 1. Ingest Sensor Data (`add_data.php`)
 Microcontrollers send HTTP GET requests to log telemetry:
 ```
-GET /iot/add_data.php?sensor=soil_moisture&data=65&indata=24.5
+GET /iot/add_data.php?sensor=soil&data=65&indata=24.5
 ```
-- **`sensor`**: Target table/sensor identifier (e.g. `soil_moisture`, `dh11`).
-- **`data`**: Primary sensor measurement (e.g. moisture level %).
+- **`sensor`**: Target table name (e.g. `soil`, `dh11`).
+- **`data`**: Primary sensor measurement (e.g. soil moisture %).
 - **`indata`**: Secondary sensor measurement (e.g. soil temperature °C).
 
 ### 2. Update Live Climate (`update_data.php`)
@@ -112,9 +186,10 @@ GET /iot/get_data.php
 **Sample JSON Response:**
 ```json
 {
-  "fan": 11,
-  "heater": 10,
-  "pump": 11
+  "fan_sw": 10,
+  "light_sw": 10,
+  "pump_sw": 11,
+  "heater_sw": 10
 }
 ```
 *(Note: `11` = ON, `10` = OFF)*
@@ -131,7 +206,8 @@ GET /iot/get_data.php
 ### Configuration
 
 1. **Copy repository** into your web root (e.g. `C:\wamp64\www\iot`).
-2. **Configure Database Connection (`config.php`)**:
+2. **Execute Database DDL**: Import the SQL DDL schema provided in the **Database Structure** section above into your MySQL server.
+3. **Configure Database Connection (`config.php`)**:
    ```php
    define('DB_HOST', 'localhost');
    define('DB_NAME', 'dev_iot');
@@ -139,8 +215,6 @@ GET /iot/get_data.php
    define('DB_PASS', '');
    define('URL', 'http://localhost/iot/');
    ```
-3. **Database Setup**:
-   Ensure MySQL database `dev_iot` is created with tables for `setting`, `dh11`, and your target sensor tables.
 
 ---
 
